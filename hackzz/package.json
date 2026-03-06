@@ -1,26 +1,29 @@
 {
   "name": "hackzz-urban-infrastructure",
-  "version": "1.0.0",
-  "description": "Urban Infrastructure Digital Twin Portal - Full Stack Application",
+  "version": "2.0.0",
+  "description": "Urban Infrastructure Digital Twin Portal - Complete Full Stack Application",
   "main": "index.html",
   "scripts": {
     "start": "concurrently \"npm run backend\" \"npm run frontend\"",
     "backend": "cd backend && npm start",
     "backend-dev": "cd backend && npm run dev",
-    "frontend": "npx live-server --port=3000 --no-browser",
-    "frontend-open": "npx live-server --port=3000 --open=index.html",
+    "frontend": "npx live-server --port=3000 --open=index.html",
+    "frontend-dev": "npx live-server --port=3000 --open=index.html --wait=1000",
     "install-all": "npm install && cd backend && npm install",
-    "dev": "concurrently \"npm run backend-dev\" \"npm run frontend-open\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"npm run backend-dev\" \"npm run frontend-dev\"",
+    "kill": "taskkill /F /IM node.exe"
   },
   "keywords": [
     "digital-twin",
     "smart-city",
     "infrastructure",
     "india",
+    "authentication",
+    "leaflet",
+    "express",
     "sqlite"
   ],
-  "author": "Your Name",
+  "author": "Your Team Name",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2",

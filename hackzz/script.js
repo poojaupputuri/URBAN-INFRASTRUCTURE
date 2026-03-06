@@ -11,215 +11,66 @@ let userLocation = null;
 let deleteCandidateId = null;
 let currentLayer = 'streets';
 let currentCity = 'india';
+let currentUser = null;
 
-// API Base URL - Update this with your backend URL
+// API Base URL
 const API_BASE_URL = 'http://localhost:5000/api';
 
 // Indian cities with precise coordinates
 const indianCities = {
-    delhi: { lat: 28.6139, lng: 77.2090, zoom: 15, name: 'Delhi-NCR' },
-    mumbai: { lat: 19.0760, lng: 72.8777, zoom: 15, name: 'Mumbai' },
-    bangalore: { lat: 12.9716, lng: 77.5946, zoom: 15, name: 'Bengaluru' },
-    chennai: { lat: 13.0827, lng: 80.2707, zoom: 15, name: 'Chennai' },
-    kolkata: { lat: 22.5726, lng: 88.3639, zoom: 15, name: 'Kolkata' },
-    hyderabad: { lat: 17.3850, lng: 78.4867, zoom: 15, name: 'Hyderabad' },
-    pune: { lat: 18.5204, lng: 73.8567, zoom: 15, name: 'Pune' },
-    ahmedabad: { lat: 23.0225, lng: 72.5714, zoom: 15, name: 'Ahmedabad' }
+    delhi: { lat: 28.6139, lng: 77.2090, zoom: 14, name: 'Delhi-NCR' },
+    mumbai: { lat: 19.0760, lng: 72.8777, zoom: 14, name: 'Mumbai' },
+    bangalore: { lat: 12.9716, lng: 77.5946, zoom: 14, name: 'Bengaluru' },
+    chennai: { lat: 13.0827, lng: 80.2707, zoom: 14, name: 'Chennai' },
+    kolkata: { lat: 22.5726, lng: 88.3639, zoom: 14, name: 'Kolkata' },
+    hyderabad: { lat: 17.3850, lng: 78.4867, zoom: 14, name: 'Hyderabad' },
+    pune: { lat: 18.5204, lng: 73.8567, zoom: 14, name: 'Pune' },
+    ahmedabad: { lat: 23.0225, lng: 72.5714, zoom: 14, name: 'Ahmedabad' },
+    jaipur: { lat: 26.9124, lng: 75.7873, zoom: 14, name: 'Jaipur' },
+    lucknow: { lat: 26.8467, lng: 80.9462, zoom: 14, name: 'Lucknow' }
 };
 
-// Sample infrastructure data (fallback if backend is unavailable)
-const sampleAssets = [
-    // Delhi-NCR
-    {
-        id: '1',
-        name: 'Signature Bridge',
-        type: 'road',
-        status: 'operational',
-        description: 'Iconic cable-stayed bridge across Yamuna River',
-        lat: 28.7087,
-        lng: 77.2297,
-        reports: 1,
-        lastUpdated: new Date().toISOString(),
-        city: 'Delhi',
-        ward: 'Wazirabad',
-        address: 'Wazirabad, Delhi, 110040'
-    },
-    {
-        id: '2',
-        name: 'Delhi Metro - Rajiv Chowk',
-        type: 'facility',
-        status: 'operational',
-        description: 'Busiest metro station with Yellow & Blue line interchange',
-        lat: 28.6328,
-        lng: 77.2197,
-        reports: 0,
-        lastUpdated: new Date().toISOString(),
-        city: 'Delhi',
-        ward: 'Connaught Place',
-        address: 'Connaught Place, Delhi, 110001'
-    },
-    {
-        id: '3',
-        name: 'Okhla Water Treatment Plant',
-        type: 'utility',
-        status: 'maintenance',
-        description: 'Major water treatment facility - pump maintenance ongoing',
-        lat: 28.5567,
-        lng: 77.2777,
-        reports: 3,
-        lastUpdated: new Date().toISOString(),
-        city: 'Delhi',
-        ward: 'Okhla',
-        address: 'Okhla Industrial Area, Delhi, 110020'
-    },
-    // Mumbai
-    {
-        id: '4',
-        name: 'Bandra-Worli Sea Link',
-        type: 'road',
-        status: 'operational',
-        description: '8-lane cable-stayed bridge connecting Bandra and Worli',
-        lat: 19.0368,
-        lng: 72.8180,
-        reports: 0,
-        lastUpdated: new Date().toISOString(),
-        city: 'Mumbai',
-        ward: 'Bandra',
-        address: 'Bandra West, Mumbai, 400050'
-    },
-    {
-        id: '5',
-        name: 'Chhatrapati Shivaji Terminus',
-        type: 'facility',
-        status: 'operational',
-        description: 'Historic railway station, UNESCO World Heritage Site',
-        lat: 18.9398,
-        lng: 72.8355,
-        reports: 0,
-        lastUpdated: new Date().toISOString(),
-        city: 'Mumbai',
-        ward: 'Fort',
-        address: 'Fort, Mumbai, 400001'
-    },
-    {
-        id: '6',
-        name: 'Dharavi Power Substation',
-        type: 'utility',
-        status: 'critical',
-        description: 'Transformer failure, frequent power outages reported',
-        lat: 19.0446,
-        lng: 72.8557,
-        reports: 8,
-        lastUpdated: new Date().toISOString(),
-        city: 'Mumbai',
-        ward: 'Dharavi',
-        address: 'Dharavi, Mumbai, 400017'
-    },
-    // Bengaluru
-    {
-        id: '7',
-        name: 'Namma Metro - MG Road',
-        type: 'facility',
-        status: 'operational',
-        description: 'Purple Line metro station in central business district',
-        lat: 12.9756,
-        lng: 77.6067,
-        reports: 0,
-        lastUpdated: new Date().toISOString(),
-        city: 'Bangalore',
-        ward: 'MG Road',
-        address: 'MG Road, Bengaluru, 560001'
-    },
-    {
-        id: '8',
-        name: 'Electronic City Flyover',
-        type: 'road',
-        status: 'maintenance',
-        description: 'Repair work due to heavy vehicle traffic',
-        lat: 12.8456,
-        lng: 77.6678,
-        reports: 4,
-        lastUpdated: new Date().toISOString(),
-        city: 'Bangalore',
-        ward: 'Electronic City',
-        address: 'Electronic City, Bengaluru, 560100'
-    },
-    // Chennai
-    {
-        id: '9',
-        name: 'Chennai Metro - Central',
-        type: 'facility',
-        status: 'operational',
-        description: 'Interchange station for metro and suburban trains',
-        lat: 13.0827,
-        lng: 80.2756,
-        reports: 0,
-        lastUpdated: new Date().toISOString(),
-        city: 'Chennai',
-        ward: 'Park Town',
-        address: 'Park Town, Chennai, 600003'
-    },
-    // Kolkata
-    {
-        id: '10',
-        name: 'Howrah Bridge',
-        type: 'road',
-        status: 'operational',
-        description: 'Iconic cantilever bridge over Hooghly River',
-        lat: 22.5851,
-        lng: 88.3467,
-        reports: 1,
-        lastUpdated: new Date().toISOString(),
-        city: 'Kolkata',
-        ward: 'Howrah',
-        address: 'Howrah, Kolkata, 711101'
-    },
-    // Hyderabad
-    {
-        id: '11',
-        name: 'Hyderabad Metro - Ameerpet',
-        type: 'facility',
-        status: 'operational',
-        description: 'Largest metro interchange in India',
-        lat: 17.4375,
-        lng: 78.4483,
-        reports: 0,
-        lastUpdated: new Date().toISOString(),
-        city: 'Hyderabad',
-        ward: 'Ameerpet',
-        address: 'Ameerpet, Hyderabad, 500016'
-    },
-    // Pune
-    {
-        id: '12',
-        name: 'Katraj Tunnel',
-        type: 'road',
-        status: 'operational',
-        description: 'Mumbai-Bangalore highway tunnel',
-        lat: 18.4567,
-        lng: 73.8567,
-        reports: 1,
-        lastUpdated: new Date().toISOString(),
-        city: 'Pune',
-        ward: 'Katraj',
-        address: 'Katraj, Pune, 411046'
-    },
-    // Ahmedabad
-    {
-        id: '13',
-        name: 'Sabarmati Riverfront',
-        type: 'facility',
-        status: 'operational',
-        description: 'Urban renewal project along Sabarmati River',
-        lat: 23.0225,
-        lng: 72.5714,
-        reports: 0,
-        lastUpdated: new Date().toISOString(),
-        city: 'Ahmedabad',
-        ward: 'Ellisbridge',
-        address: 'Ellisbridge, Ahmedabad, 380006'
+// ==================== AUTHENTICATION ====================
+
+// Check authentication on load
+document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+
+    if (!token || !user) {
+        window.location.href = 'login.html';
+        return;
     }
-];
+
+    try {
+        currentUser = JSON.parse(user);
+        updateUserInfo();
+        console.log('User authenticated:', currentUser);
+        initializeApp();
+    } catch (error) {
+        console.error('Error parsing user data:', error);
+        window.location.href = 'login.html';
+    }
+});
+
+function updateUserInfo() {
+    document.getElementById('userName').textContent = currentUser.username;
+    
+    let roleText = currentUser.role === 'admin' ? 'Administrator' :
+                   currentUser.role === 'city_planner' ? 'City Planner' : 'User';
+    
+    if (currentUser.city) {
+        roleText += ` (${currentUser.city})`;
+    }
+    
+    document.getElementById('userRole').textContent = roleText;
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
 
 // ==================== API FUNCTIONS ====================
 
@@ -227,39 +78,19 @@ async function fetchAssetsFromBackend() {
     try {
         console.log('Fetching assets from backend...');
         
-        let url = `${API_BASE_URL}/assets`;
-        if (currentFilter !== 'all') {
-            if (currentFilter === 'maintenance') {
-                url += '?status=maintenance,critical';
-            } else {
-                url += `?type=${currentFilter}`;
-            }
-        }
-        
-        const response = await fetch(url);
+        const response = await fetch(`${API_BASE_URL}/assets`);
         const result = await response.json();
         
         if (result.success && result.data) {
-            // Convert backend format to frontend format
-            assets = result.data.map(asset => ({
-                id: asset._id,
-                name: asset.name,
-                type: asset.type,
-                status: asset.status,
-                description: asset.description,
-                lat: asset.location.coordinates[1],
-                lng: asset.location.coordinates[0],
-                reports: asset.reports || 0,
-                lastUpdated: asset.lastUpdated,
-                city: asset.city,
-                ward: asset.ward || '',
-                address: asset.address || ''
-            }));
+            assets = result.data;
+            console.log(`✅ Loaded ${assets.length} assets from backend`);
             
-            console.log(`Loaded ${assets.length} assets from backend`);
+            // Update city badges with asset counts
+            updateCityBadges();
+            
             return true;
         } else {
-            console.warn('Backend returned no data, using sample data');
+            console.warn('Backend returned no data');
             return false;
         }
     } catch (error) {
@@ -268,77 +99,168 @@ async function fetchAssetsFromBackend() {
     }
 }
 
-async function saveAssetToBackend(assetData, isUpdate = false, assetId = null) {
+function updateCityBadges() {
+    // Count assets per city
+    const cityCounts = {};
+    assets.forEach(asset => {
+        cityCounts[asset.city] = (cityCounts[asset.city] || 0) + 1;
+    });
+
+    // Update city button badges
+    document.querySelectorAll('.city-btn').forEach(btn => {
+        const city = btn.getAttribute('data-city');
+        const cityName = 
+            city === 'delhi' ? 'Delhi' :
+            city === 'mumbai' ? 'Mumbai' :
+            city === 'bangalore' ? 'Bangalore' :
+            city === 'chennai' ? 'Chennai' :
+            city === 'kolkata' ? 'Kolkata' :
+            city === 'hyderabad' ? 'Hyderabad' :
+            city === 'pune' ? 'Pune' :
+            city === 'ahmedabad' ? 'Ahmedabad' :
+            city === 'jaipur' ? 'Jaipur' :
+            city === 'lucknow' ? 'Lucknow' : '';
+        
+        const count = cityCounts[cityName] || 0;
+        const badge = btn.querySelector('.city-badge');
+        if (badge) {
+            badge.textContent = `${count} assets`;
+        }
+    });
+}
+
+async function createAsset(assetData) {
     try {
-        const url = isUpdate ? `${API_BASE_URL}/assets/${assetId}` : `${API_BASE_URL}/assets`;
-        const method = isUpdate ? 'PUT' : 'POST';
-        
-        // Convert frontend format to backend format
-        const backendData = {
-            name: assetData.name,
-            type: assetData.type,
-            status: assetData.status,
-            city: assetData.city,
-            ward: assetData.ward,
-            lat: assetData.lat,
-            lng: assetData.lng,
-            description: assetData.description || ''
-        };
-        
-        const response = await fetch(url, {
-            method: method,
+        const response = await fetch(`${API_BASE_URL}/assets`, {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify(backendData)
+            body: JSON.stringify(assetData)
         });
         
         const result = await response.json();
         
         if (result.success) {
-            return { success: true, data: result.data };
+            showToast('✅ Asset created successfully', 'success');
+            await fetchAssetsFromBackend(); // Refresh assets
+            renderStats();
+            renderAssetList();
+            renderMarkers(); // Re-render markers with new asset
+            return true;
         } else {
-            return { success: false, error: result.message };
+            showToast('❌ ' + (result.message || 'Error creating asset'), 'error');
+            return false;
         }
     } catch (error) {
-        console.error('Error saving to backend:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-async function deleteAssetFromBackend(assetId) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/assets/${assetId}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        return result.success;
-    } catch (error) {
-        console.error('Error deleting from backend:', error);
+        console.error('Error creating asset:', error);
+        showToast('❌ Failed to connect to server', 'error');
         return false;
     }
 }
 
-async function addReportToBackend(assetId) {
+async function updateAsset(id, assetData) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/assets/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(assetData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('✅ Asset updated successfully', 'success');
+            await fetchAssetsFromBackend(); // Refresh assets
+            renderStats();
+            renderAssetList();
+            renderMarkers(); // Re-render markers with updated asset
+            return true;
+        } else {
+            showToast('❌ ' + (result.message || 'Error updating asset'), 'error');
+            return false;
+        }
+    } catch (error) {
+        console.error('Error updating asset:', error);
+        showToast('❌ Failed to connect to server', 'error');
+        return false;
+    }
+}
+
+async function deleteAssetFromServer(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/assets/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('🗑️ Asset deleted successfully', 'success');
+            await fetchAssetsFromBackend(); // Refresh assets
+            renderStats();
+            renderAssetList();
+            renderMarkers(); // Re-render markers after deletion
+            return true;
+        } else {
+            showToast('❌ ' + (result.message || 'Error deleting asset'), 'error');
+            return false;
+        }
+    } catch (error) {
+        console.error('Error deleting asset:', error);
+        showToast('❌ Failed to connect to server', 'error');
+        return false;
+    }
+}
+
+async function addReport(assetId) {
     try {
         const response = await fetch(`${API_BASE_URL}/assets/${assetId}/report`, {
             method: 'PATCH'
         });
         
         const result = await response.json();
-        return result.success;
+        
+        if (result.success) {
+            showToast('📢 Report added', 'success');
+            await fetchAssetsFromBackend(); // Refresh assets
+            renderStats();
+            renderAssetList();
+            renderMarkers(); // Re-render markers with updated status
+            return true;
+        } else {
+            showToast('❌ ' + (result.message || 'Error adding report'), 'error');
+            return false;
+        }
     } catch (error) {
-        console.error('Error adding report to backend:', error);
+        console.error('Error adding report:', error);
+        showToast('❌ Failed to connect to server', 'error');
         return false;
     }
 }
 
 // ==================== INITIALIZATION ====================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded - initializing application');
-    initializeData();
+async function initializeApp() {
+    console.log('Initializing application...');
+    
+    const backendSuccess = await fetchAssetsFromBackend();
+    
+    if (!backendSuccess) {
+        showToast('⚠️ Using sample data (backend unavailable)', 'warning');
+        // Use sample data if needed
+    }
+    
     initMap();
+    renderStats();
+    renderAssetList();
+    renderMarkers(); // Initial marker render
     setupEventListeners();
     updateTimestamp();
     setInterval(updateTimestamp, 60000);
@@ -346,34 +268,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Hide selected location panel initially
     var panel = document.getElementById('selectedLocationPanel');
     if (panel) panel.style.display = 'none';
-});
-
-async function initializeData() {
-    // Try to load from backend first
-    const backendSuccess = await fetchAssetsFromBackend();
-    
-    if (!backendSuccess) {
-        // Fallback to localStorage or sample data
-        var savedAssets = localStorage.getItem('indianInfrastructure');
-        if (savedAssets) {
-            assets = JSON.parse(savedAssets);
-            console.log('Loaded assets from localStorage:', assets.length);
-        } else {
-            assets = sampleAssets.slice(); // Create a copy
-            saveToLocalStorage();
-            console.log('Loaded sample assets:', assets.length);
-        }
-    }
-    
-    // Render after data is loaded
-    renderStats();
-    renderAssetList();
-    renderMarkers();
-}
-
-function saveToLocalStorage() {
-    localStorage.setItem('indianInfrastructure', JSON.stringify(assets));
-    console.log('Saved to localStorage');
 }
 
 function updateTimestamp() {
@@ -392,7 +286,6 @@ function updateTimestamp() {
 function initMap() {
     console.log('Initializing map...');
     
-    // Initialize map centered on India
     map = L.map('map', {
         center: [22.5726, 78.9629],
         zoom: 5,
@@ -414,7 +307,7 @@ function initMap() {
         position: 'bottomright'
     }).addTo(map);
 
-    // Initialize marker cluster for better performance
+    // Initialize marker cluster
     markerCluster = L.markerClusterGroup({
         maxClusterRadius: 50,
         spiderfyOnMaxZoom: true,
@@ -426,7 +319,6 @@ function initMap() {
 
     // Handle map click for location selection
     map.on('click', function(e) {
-        console.log('Map clicked at:', e.latlng);
         var lat = e.latlng.lat;
         var lng = e.latlng.lng;
         setSelectedLocation(lat, lng);
@@ -440,37 +332,29 @@ function initMap() {
         updateVisibleStats();
     });
 
-    // Update visible stats on move
     map.on('moveend', updateVisibleStats);
-
-    // Add location handlers
     map.on('locationfound', handleLocationFound);
     map.on('locationerror', handleLocationError);
 
     console.log('Map initialized successfully');
 }
 
-// ==================== LOCATION FUNCTIONS ====================
 function setSelectedLocation(lat, lng) {
     console.log('Setting selected location:', lat, lng);
     
     selectedLocation = { lat: lat, lng: lng };
     
-    // Update UI
     document.getElementById('selectedLat').textContent = lat.toFixed(6);
     document.getElementById('selectedLng').textContent = lng.toFixed(6);
     document.getElementById('selectedLocationPanel').style.display = 'block';
     
-    // Update form fields
     document.getElementById('latitude').value = lat.toFixed(6);
     document.getElementById('longitude').value = lng.toFixed(6);
     
-    // Remove existing selected location marker
     if (selectedLocationMarker) {
         map.removeLayer(selectedLocationMarker);
     }
     
-    // Add new selected location marker
     var selectedIcon = L.divIcon({
         className: 'custom-marker selected-marker',
         html: '<i class="fas fa-map-pin" style="color: white;"></i>',
@@ -483,7 +367,6 @@ function setSelectedLocation(lat, lng) {
         zIndexOffset: 1000
     }).addTo(map);
     
-    // Add popup with location info
     selectedLocationMarker.bindPopup(
         '<div style="text-align: center; padding: 10px;">' +
         '<b>📍 Selected Location</b><br>' +
@@ -513,7 +396,6 @@ function clearSelectedLocation() {
     }
 }
 
-// ==================== USER LOCATION ====================
 function getUserLocation() {
     var locateBtn = document.getElementById('locateUserBtn');
     var originalHtml = locateBtn.innerHTML;
@@ -577,7 +459,6 @@ function handleLocationError(e) {
     locateBtn.disabled = false;
 }
 
-// ==================== CITY NAVIGATION ====================
 function flyToCity(cityKey) {
     var city = indianCities[cityKey];
     if (city) {
@@ -607,8 +488,9 @@ function renderMarkers() {
     
     // Clear existing markers from cluster
     markerCluster.clearLayers();
+    markers = [];
     
-    // Filter assets
+    // Filter assets based on current filter
     var filteredAssets = [];
     if (currentFilter === 'all') {
         filteredAssets = assets;
@@ -624,7 +506,7 @@ function renderMarkers() {
     
     console.log('Filtered assets:', filteredAssets.length);
     
-    // Create markers
+    // Create markers for each asset
     for (var i = 0; i < filteredAssets.length; i++) {
         var asset = filteredAssets[i];
         
@@ -664,6 +546,7 @@ function renderMarkers() {
         
         // Add to cluster
         markerCluster.addLayer(marker);
+        markers.push(marker);
     }
     
     updateVisibleStats();
@@ -671,16 +554,19 @@ function renderMarkers() {
 }
 
 function getMarkerIcon(asset) {
-    var icon = '';
-    switch(asset.type) {
-        case 'road': icon = 'fa-road'; break;
-        case 'utility': icon = 'fa-bolt'; break;
-        case 'facility': icon = 'fa-building'; break;
-        default: icon = 'fa-map-marker-alt';
-    }
+    const icons = {
+        road: 'fa-road',
+        utility: 'fa-bolt',
+        facility: 'fa-building',
+        railway: 'fa-train',
+        airport: 'fa-plane',
+        smart_pole: 'fa-lightbulb'
+    };
+    
+    const icon = icons[asset.type] || 'fa-map-marker-alt';
     
     if (asset.status === 'critical') {
-        return '<i class="fas ' + icon + '" style="color: white; animation: pulse 1.5s infinite;"></i>';
+        return '<i class="fas ' + icon + '" style="color: white; animation: pulse-marker 1.5s infinite;"></i>';
     }
     return '<i class="fas ' + icon + '" style="color: white;"></i>';
 }
@@ -688,15 +574,32 @@ function getMarkerIcon(asset) {
 function getMarkerColor(asset) {
     if (asset.status === 'critical') return 'marker-critical';
     if (asset.status === 'maintenance') return 'marker-maintenance';
-    return 'marker-' + asset.type;
+    
+    const colors = {
+        road: 'marker-road',
+        utility: 'marker-utility',
+        facility: 'marker-facility',
+        railway: 'marker-railway',
+        airport: 'marker-airport',
+        smart_pole: 'marker-smart_pole'
+    };
+    
+    return colors[asset.type] || 'marker-road';
 }
 
 function createPopupContent(asset) {
     var statusClass = 'status-' + asset.status;
     var statusText = asset.status.charAt(0).toUpperCase() + asset.status.slice(1);
-    var reportWarning = asset.reports >= 3 ? '🔔' : '';
     
-    return '<div style="min-width: 280px;">' +
+    // Permission checks
+    const canEdit = currentUser.role === 'admin' || 
+                   (currentUser.role === 'city_planner' && currentUser.city === asset.city) ||
+                   (currentUser.role === 'user' && asset.createdBy === currentUser.id);
+    
+    const canDelete = currentUser.role === 'admin' || 
+                     (currentUser.role === 'city_planner' && currentUser.city === asset.city);
+    
+    var popup = '<div style="min-width: 280px;">' +
         '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">' +
         '<h3 style="margin:0; color:#2c3e50;">' + asset.name + 
         (asset.reports >= 5 ? ' ⚠️' : '') + '</h3>' +
@@ -707,7 +610,7 @@ function createPopupContent(asset) {
         '<div style="display:flex; gap:10px; justify-content:space-around;">' +
         '<div><i class="fas ' + getAssetIcon(asset) + '" style="color:#3498db;"></i> ' + asset.type + '</div>' +
         '<div><i class="fas fa-city" style="color:#e74c3c;"></i> ' + asset.city + '</div>' +
-        '<div><i class="fas fa-exclamation-triangle" style="color:#f39c12;"></i> ' + asset.reports + '</div>' +
+        '<div><i class="fas fa-exclamation-triangle" style="color:#f39c12;"></i> ' + asset.reports + ' reports</div>' +
         '</div></div>' +
         
         (asset.description ? '<div style="background:#e8f4fd; padding:8px; border-radius:4px; margin-bottom:10px;">' +
@@ -716,27 +619,46 @@ function createPopupContent(asset) {
         '<div style="font-size:11px; margin-bottom:10px;">' +
         '<i class="fas fa-map-pin"></i> ' + (asset.address || asset.city) + '</div>' +
         
-        '<div style="display:flex; gap:5px;">' +
-        '<button onclick="editAsset(\'' + asset.id + '\')" ' +
-        'style="flex:1; padding:8px; background:#3498db; color:white; border:none; border-radius:4px; cursor:pointer;">' +
-        '<i class="fas fa-edit"></i> Edit</button>' +
-        '<button onclick="simulateReport(\'' + asset.id + '\')" ' +
+        '<div style="font-size:10px; color:#7f8c8d; margin-bottom:10px;">' +
+        '<i class="fas fa-clock"></i> ' + new Date(asset.lastUpdated).toLocaleString() + '</div>' +
+        
+        '<div style="display:flex; gap:5px;">';
+    
+    // Edit button
+    if (canEdit) {
+        popup += '<button onclick="editAsset(\'' + asset.id + '\')" ' +
+            'style="flex:1; padding:8px; background:#3498db; color:white; border:none; border-radius:4px; cursor:pointer;">' +
+            '<i class="fas fa-edit"></i> Edit</button>';
+    }
+    
+    // Report button (always visible)
+    popup += '<button onclick="simulateReport(\'' + asset.id + '\')" ' +
         'style="flex:1; padding:8px; background:#f39c12; color:white; border:none; border-radius:4px; cursor:pointer;">' +
-        '<i class="fas fa-exclamation"></i> ' + (asset.reports > 0 ? asset.reports + '🔔' : 'Report') + '</button>' +
-        '<button onclick="showDeleteConfirmation(\'' + asset.id + '\')" ' +
-        'style="flex:1; padding:8px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;">' +
-        '<i class="fas fa-trash"></i></button>' +
-        '</div>' +
+        '<i class="fas fa-exclamation"></i> Report</button>';
+    
+    // Delete button
+    if (canDelete) {
+        popup += '<button onclick="showDeleteConfirmation(\'' + asset.id + '\')" ' +
+            'style="flex:1; padding:8px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;">' +
+            '<i class="fas fa-trash"></i></button>';
+    }
+    
+    popup += '</div>' +
         '</div>';
+    
+    return popup;
 }
 
 function getAssetIcon(asset) {
-    switch(asset.type) {
-        case 'road': return 'fa-road';
-        case 'utility': return 'fa-bolt';
-        case 'facility': return 'fa-building';
-        default: return 'fa-map-marker-alt';
-    }
+    const icons = {
+        road: 'fa-road',
+        utility: 'fa-bolt',
+        facility: 'fa-building',
+        railway: 'fa-train',
+        airport: 'fa-plane',
+        smart_pole: 'fa-lightbulb'
+    };
+    return icons[asset.type] || 'fa-map-marker-alt';
 }
 
 function updateVisibleStats() {
@@ -759,21 +681,25 @@ function updateVisibleStats() {
 // ==================== STATS RENDERING ====================
 function renderStats() {
     var total = assets.length;
-    var roads = assets.filter(function(a) { return a.type === 'road'; }).length;
-    var utilities = assets.filter(function(a) { return a.type === 'utility'; }).length;
-    var facilities = assets.filter(function(a) { return a.type === 'facility'; }).length;
-    var critical = assets.filter(function(a) { return a.status === 'critical'; }).length;
-    var maintenance = assets.filter(function(a) { return a.status === 'maintenance'; }).length;
+    var roads = assets.filter(a => a.type === 'road').length;
+    var utilities = assets.filter(a => a.type === 'utility').length;
+    var facilities = assets.filter(a => a.type === 'facility').length;
+    var railways = assets.filter(a => a.type === 'railway').length;
+    var airports = assets.filter(a => a.type === 'airport').length;
+    var smartPoles = assets.filter(a => a.type === 'smart_pole').length;
+    var critical = assets.filter(a => a.status === 'critical').length;
+    var maintenance = assets.filter(a => a.status === 'maintenance').length;
     
     document.getElementById('totalAssets').textContent = total;
     document.getElementById('roadCount').textContent = roads;
     document.getElementById('utilityCount').textContent = utilities;
     document.getElementById('facilityCount').textContent = facilities;
+    document.getElementById('railwayCount').textContent = railways;
+    document.getElementById('airportCount').textContent = airports;
+    document.getElementById('smartPoleCount').textContent = smartPoles;
     document.getElementById('criticalCount').textContent = critical;
     document.getElementById('maintenanceCount').textContent = maintenance;
     document.getElementById('assetCount').textContent = total;
-    
-    console.log('Stats updated:', {total, roads, utilities, facilities, critical, maintenance});
 }
 
 function renderAssetList() {
@@ -784,12 +710,11 @@ function renderAssetList() {
         assetList.innerHTML = '<div style="text-align:center; color:#7f8c8d; padding:40px;">' +
             '<i class="fas fa-map-marked-alt" style="font-size:48px; opacity:0.3;"></i>' +
             '<p>No infrastructure assets found</p>' +
-            '<p style="font-size:12px;">Click on map to add your first asset!</p>' +
+            '<p style="font-size:12px;">Click "Add New Asset" to create your first asset!</p>' +
             '</div>';
         return;
     }
     
-    // Filter assets
     var displayAssets = [];
     if (currentFilter === 'all') {
         displayAssets = assets;
@@ -803,7 +728,6 @@ function renderAssetList() {
         });
     }
     
-    // Sort by critical status first
     displayAssets.sort(function(a, b) {
         if (a.status === 'critical' && b.status !== 'critical') return -1;
         if (a.status !== 'critical' && b.status === 'critical') return 1;
@@ -830,26 +754,9 @@ function renderAssetList() {
     }
     
     assetList.innerHTML = html;
-    console.log('Asset list rendered, items:', displayAssets.length);
 }
 
-function highlightAssetInList(assetId) {
-    var items = document.querySelectorAll('.asset-item');
-    for (var i = 0; i < items.length; i++) {
-        items[i].style.background = '';
-    }
-    
-    var selected = document.querySelector('.asset-item[data-id="' + assetId + '"]');
-    if (selected) {
-        selected.style.background = '#e8f4fd';
-        selected.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-}
-
-// ==================== CRUD OPERATIONS ====================
 function selectAsset(assetId) {
-    console.log('Selecting asset:', assetId);
-    
     for (var i = 0; i < assets.length; i++) {
         if (assets[i].id === assetId) {
             var asset = assets[i];
@@ -867,10 +774,22 @@ function selectAsset(assetId) {
                 });
             }, 2000);
             
-            highlightAssetInList(assetId);
             showToast('📍 ' + asset.name, 'success');
             break;
         }
+    }
+}
+
+function highlightAssetInList(assetId) {
+    var items = document.querySelectorAll('.asset-item');
+    for (var i = 0; i < items.length; i++) {
+        items[i].style.background = '';
+    }
+    
+    var selected = document.querySelector('.asset-item[data-id="' + assetId + '"]');
+    if (selected) {
+        selected.style.background = '#e8f4fd';
+        selected.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
@@ -887,9 +806,7 @@ function openAddModal() {
     document.getElementById('assetModal').classList.add('show');
 }
 
-async function editAsset(assetId) {
-    console.log('Editing asset:', assetId);
-    
+function editAsset(assetId) {
     for (var i = 0; i < assets.length; i++) {
         if (assets[i].id === assetId) {
             var a = assets[i];
@@ -923,79 +840,15 @@ function showDeleteConfirmation(assetId) {
 
 async function deleteAsset() {
     if (!deleteCandidateId) return;
-    
-    // Try to delete from backend first
-    const backendSuccess = await deleteAssetFromBackend(deleteCandidateId);
-    
-    if (backendSuccess) {
-        // Remove from local array
-        var newAssets = [];
-        var deletedName = '';
-        
-        for (var i = 0; i < assets.length; i++) {
-            if (assets[i].id === deleteCandidateId) {
-                deletedName = assets[i].name;
-            } else {
-                newAssets.push(assets[i]);
-            }
-        }
-        
-        assets = newAssets;
-        saveToLocalStorage();
-        
-        renderStats();
-        renderAssetList();
-        renderMarkers();
-        
-        closeConfirmModal();
-        showToast('🗑️ Deleted ' + deletedName, 'success');
-    } else {
-        showToast('Failed to delete from server', 'error');
-    }
-    
+    await deleteAssetFromServer(deleteCandidateId);
+    closeConfirmModal();
     deleteCandidateId = null;
 }
 
 async function simulateReport(assetId) {
-    // Try to add report to backend
-    const backendSuccess = await addReportToBackend(assetId);
-    
-    if (backendSuccess) {
-        // Refresh assets from backend
-        await fetchAssetsFromBackend();
-        renderStats();
-        renderAssetList();
-        renderMarkers();
-        showToast('📢 Report added', 'success');
-    } else {
-        // Fallback to local update
-        for (var i = 0; i < assets.length; i++) {
-            if (assets[i].id === assetId) {
-                var a = assets[i];
-                a.reports = (a.reports || 0) + 1;
-                
-                if (a.reports >= 5 && a.status !== 'critical') {
-                    a.status = 'critical';
-                    showToast('⚠️ ' + a.name + ' marked CRITICAL!', 'warning');
-                } else if (a.reports >= 3 && a.status !== 'maintenance') {
-                    a.status = 'maintenance';
-                    showToast('🔧 ' + a.name + ' moved to maintenance', 'warning');
-                }
-                
-                a.lastUpdated = new Date().toISOString();
-                saveToLocalStorage();
-                
-                renderStats();
-                renderAssetList();
-                renderMarkers();
-                showToast('📢 Report added (' + a.reports + ' total)', 'success');
-                break;
-            }
-        }
-    }
+    await addReport(assetId);
 }
 
-// ==================== FORM HANDLING ====================
 document.getElementById('assetForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -1022,59 +875,20 @@ document.getElementById('assetForm').addEventListener('submit', async function(e
         ward: document.getElementById('assetWard').value,
         lat: lat,
         lng: lng,
-        description: document.getElementById('assetDescription').value,
-        reports: 0,
-        lastUpdated: new Date().toISOString()
+        description: document.getElementById('assetDescription').value
     };
     
     if (assetId) {
-        // Update existing
-        const result = await saveAssetToBackend(assetData, true, assetId);
-        
-        if (result.success) {
-            // Refresh assets from backend
-            await fetchAssetsFromBackend();
-            showToast('✅ Asset updated', 'success');
-        } else {
-            // Fallback to local update
-            for (var i = 0; i < assets.length; i++) {
-                if (assets[i].id === assetId) {
-                    assetData.reports = assets[i].reports;
-                    assets[i] = { ...assets[i], ...assetData };
-                    break;
-                }
-            }
-            saveToLocalStorage();
-            showToast('✅ Asset updated (local)', 'success');
-        }
+        await updateAsset(assetId, assetData);
     } else {
-        // Create new
-        const result = await saveAssetToBackend(assetData, false);
-        
-        if (result.success) {
-            // Refresh assets from backend
-            await fetchAssetsFromBackend();
-            showToast('✅ Asset created', 'success');
-        } else {
-            // Fallback to local
-            assetData.id = Date.now().toString();
-            assets.push(assetData);
-            saveToLocalStorage();
-            showToast('✅ Asset created (local)', 'success');
-        }
+        await createAsset(assetData);
     }
     
     closeModal();
-    renderStats();
-    renderAssetList();
-    renderMarkers();
     clearSelectedLocation();
 });
 
-// ==================== EVENT LISTENERS ====================
 function setupEventListeners() {
-    console.log('Setting up event listeners');
-    
     // Filter buttons
     var filterBtns = document.querySelectorAll('.filter-btn');
     for (var i = 0; i < filterBtns.length; i++) {
@@ -1122,7 +936,7 @@ function setupEventListeners() {
     if (clearLocation) clearLocation.addEventListener('click', clearSelectedLocation);
     
     var useLocation = document.getElementById('useLocationForAsset');
-    if (useLocation) useLocation.addEventListener('click', useSelectedLocationForAsset);
+    if (useLocation) useLocation.addEventListener('click', openAddModal);
     
     var copyCoords = document.getElementById('copyCoords');
     if (copyCoords) copyCoords.addEventListener('click', copyCoordinatesToClipboard);
@@ -1169,21 +983,19 @@ function setupEventListeners() {
                 return;
             }
             
-            // Filter assets based on search
             var filtered = assets.filter(function(asset) {
                 return asset.name.toLowerCase().includes(searchTerm) ||
                        asset.city.toLowerCase().includes(searchTerm) ||
+                       asset.type.toLowerCase().includes(searchTerm) ||
                        (asset.description && asset.description.toLowerCase().includes(searchTerm));
             });
             
-            // Update list
             if (filtered.length === 0) {
                 document.getElementById('assetList').innerHTML = 
                     '<div style="text-align:center; color:#7f8c8d; padding:30px;">' +
                     '<i class="fas fa-search" style="font-size:48px; opacity:0.3;"></i>' +
                     '<p>No assets found for "' + searchTerm + '"</p></div>';
             } else {
-                // Create temporary list
                 var html = '';
                 for (var k = 0; k < filtered.length; k++) {
                     var a = filtered[k];
@@ -1202,11 +1014,8 @@ function setupEventListeners() {
             }
         });
     }
-    
-    console.log('Event listeners setup complete');
 }
 
-// ==================== LOCATION UTILITIES ====================
 function copyCoordinatesToClipboard() {
     if (!selectedLocation) {
         showToast('No location selected', 'error');
@@ -1215,31 +1024,11 @@ function copyCoordinatesToClipboard() {
     
     var text = selectedLocation.lat.toFixed(6) + ', ' + selectedLocation.lng.toFixed(6);
     
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(function() {
-            showToast('📍 Coordinates copied!', 'success');
-        });
-    } else {
-        var textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
+    navigator.clipboard.writeText(text).then(function() {
         showToast('📍 Coordinates copied!', 'success');
-    }
+    });
 }
 
-function useSelectedLocationForAsset() {
-    if (!selectedLocation) {
-        showToast('Please select a location on the map first', 'error');
-        return;
-    }
-    
-    openAddModal();
-}
-
-// ==================== MODAL FUNCTIONS ====================
 function closeModal() {
     document.getElementById('assetModal').classList.remove('show');
 }
@@ -1249,7 +1038,6 @@ function closeConfirmModal() {
     deleteCandidateId = null;
 }
 
-// ==================== TOAST NOTIFICATION ====================
 function showToast(message, type) {
     var toast = document.getElementById('toast');
     if (!toast) return;
@@ -1262,7 +1050,6 @@ function showToast(message, type) {
     }, 3000);
 }
 
-// ==================== UTILITY FUNCTIONS ====================
 function toggleFullscreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
@@ -1280,22 +1067,14 @@ function zoomIn() {
 function zoomOut() {
     map.zoomOut();
 }
-assets = sampleAssets.slice();
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded, initializing with sample data');
-    assets = sampleAssets.slice();
-    renderStats();
-    renderAssetList();
-    if (map) {
-        renderMarkers();
-    }
-});
-// ==================== EXPORT GLOBAL FUNCTIONS ====================
+
+// Make functions globally available
 window.editAsset = editAsset;
 window.simulateReport = simulateReport;
 window.selectAsset = selectAsset;
 window.showDeleteConfirmation = showDeleteConfirmation;
-window.useSelectedLocationForAsset = useSelectedLocationForAsset;
+window.useSelectedLocationForAsset = openAddModal;
 window.copyCoordinatesToClipboard = copyCoordinatesToClipboard;
 window.flyToCity = flyToCity;
 window.resetToIndiaView = resetToIndiaView;
+window.logout = logout;

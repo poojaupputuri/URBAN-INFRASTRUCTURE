@@ -1,4 +1,5 @@
 {
+  "name": "urban-infrastructure-digital-twin",
   "version": 2,
   "builds": [
     {
@@ -6,26 +7,49 @@
       "use": "@vercel/static"
     },
     {
-      "src": "*.css",
+      "src": "*.js",
       "use": "@vercel/static"
     },
     {
-      "src": "*.js",
+      "src": "*.css",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/styles.css",
-      "dest": "/styles.css"
+      "src": "/",
+      "dest": "/index.html"
     },
     {
-      "src": "/script.js",
-      "dest": "/script.js"
+      "src": "/login",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/register",
+      "dest": "/register.html"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/dashboard.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
     },
     {
       "src": "/(.*)",
       "dest": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     }
   ]
 }
